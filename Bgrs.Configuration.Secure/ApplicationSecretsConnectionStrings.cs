@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Bgrs.Configuration.Secure
 {
@@ -46,6 +48,13 @@ namespace Bgrs.Configuration.Secure
         /// <param name="key">metadata property key</param>
         /// <returns>value of property</returns>
         string this[string key] { get; }
+
+        /// <summary>
+        /// Takes all the metadata properties and creates an object out of them.
+        /// </summary>
+        /// <typeparam name="T">Type of object to be created</typeparam>
+        /// <returns>Object of type T, populated with values from the MetaDataProperties list</returns>
+        T MetadataConverter<T>() where T : class, new();
     }
 
     /// <summary>
@@ -107,8 +116,31 @@ namespace Bgrs.Configuration.Secure
             }
         }
 
+        /// <summary>
+        /// Takes all the metadata properties and creates an object out of them.
+        /// </summary>
+        /// <typeparam name="T">Type of object to be created</typeparam>
+        /// <returns>Object of type T, populated with values from the MetaDataProperties list</returns>
+        public T MetadataConverter<T>() where T : class, new()
+        {
+            T retObj = default(T);
+
+            try
+            {
+                JObject retVal = new JObject();
+                foreach (SecretMetaData metaData in MetaDataProperties)
+                {
+                    JProperty property = new JProperty(metaData.Name, metaData.Value);
+                    retVal.Add(property);
+                }
+
+                retObj = JsonConvert.DeserializeObject<T>(retVal.ToString(Formatting.None));
+            }
+            catch 
+            {
+            }
+
+            return retObj;
+        }
     }
-
-
-
 }
